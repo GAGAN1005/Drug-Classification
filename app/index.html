@@ -388,16 +388,24 @@
       const statusText = document.getElementById("status-text");
       const submitBtn = document.getElementById("submit-btn");
 
-      try {
-        session = await ort.InferenceSession.create(MODEL_URL);
-        statusDot.className = "dot ready";
-        statusText.textContent = "Model loaded successfully.";
-        submitBtn.disabled = false;
-      } catch (err) {
-        console.error("Failed to load ONNX model:", err);
-        statusDot.className = "dot error";
-        statusText.textContent = "Failed to load model (" + err.message + ")";
+      const candidates = ["model/drug_model.onnx", "../model/drug_model.onnx"];
+      let lastErr = null;
+
+      for (const url of candidates) {
+        try {
+          session = await ort.InferenceSession.create(url);
+          statusDot.className = "dot ready";
+          statusText.textContent = "Model loaded successfully.";
+          submitBtn.disabled = false;
+          return;
+        } catch (err) {
+          lastErr = err;
+        }
       }
+
+      console.error("Failed to load ONNX model:", lastErr);
+      statusDot.className = "dot error";
+      statusText.textContent = "Failed to load model (" + (lastErr ? lastErr.message : "Not found") + ")";
     }
 
     async function predict(event) {
